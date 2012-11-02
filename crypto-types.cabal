@@ -1,0 +1,26 @@
+Name:                crypto-types
+Version:             0.1.0
+Description:         Generic cryptography types
+License:             BSD3
+License-file:        LICENSE
+Copyright:           Vincent Hanquez <vincent@snarc.org>
+Author:              Vincent Hanquez <vincent@snarc.org>
+Maintainer:          Vincent Hanquez <vincent@snarc.org>
+Synopsis:            Generic cryptography types
+Category:            Cryptography
+Build-Type:          Simple
+Homepage:            http://github.com/vincenthz/hs-crypto-types
+Cabal-Version:       >=1.6
+
+Library
+  Exposed-modules:   Crypto.Types
+                   , Crypto.Types.SecureMem
+  Build-depends:     base >= 4 && < 5
+                   , bytestring
+                   , cereal
+                   , ghc-prim
+  C-sources:         cbits/utils.c
+
+source-repository head
+  type:     git
+  location: git://github.com/vincenthz/hs-crypto-types
