@@ -5,16 +5,29 @@
 -- Stability   : Stable
 -- Portability : Excellent
 --
+{-# LANGUAGE DeriveDataTypeable #-}
 module Crypto.Types
     (
-    -- * Keys
-      Key64(..)
-    , Key128(..)
-    , Key256(..)
-    -- * Initial Vectors
-    , IV64(..)
-    , IV128(..)
-    , IV256(..)
+    -- * Keys Types
+      Key64
+    , Key128
+    , Key192
+    , Key256
+    -- * Keys Constructors
+    , key64
+    , key128
+    , key192
+    , key256
+    , InvalidKeySize(..)
+    -- * Initial Vectors Types
+    , IV64
+    , IV128
+    , IV256
+    -- * Initial Vectors Constructors
+    , iv64
+    , iv128
+    , iv256
+    , InvalidIVSize(..)
     -- * A generic secret
     , Secret(..)
     ) where
@@ -22,7 +35,10 @@ module Crypto.Types
 import Data.Word
 import Crypto.Types.SecureMem
 import Control.Applicative ((<$>))
+import Control.Exception (Exception, throw)
 import Data.Serialize
+import Data.Data
+import Data.ByteString as B
 
 -- | a Secret
 newtype Secret = Secret SecureMem
@@ -40,9 +56,42 @@ newtype Key64 = Key64 SecureMem
 newtype Key128 = Key128 SecureMem
     deriving (Eq)
 
+-- | 192 bits key
+newtype Key192 = Key192 SecureMem
+    deriving (Eq)
+
 -- | 256 bits key
 newtype Key256 = Key256 SecureMem
     deriving (Eq)
+
+-- | Invalid Key size exception raised if key is not of proper size.
+--
+-- the first argument is the expected size and the second is the
+-- received size.
+data InvalidKeySize = InvalidKeySize Int Int
+    deriving (Show,Eq,Typeable)
+
+instance Exception InvalidKeySize
+
+key64 :: ByteString -> Key64
+key64 b
+    | B.length b == 8 = Key64 $ secureMemFromByteString b
+    | otherwise       = throw $ InvalidKeySize 8 (B.length b)
+
+key128 :: ByteString -> Key128
+key128 b
+    | B.length b == 16 = Key128 $ secureMemFromByteString b
+    | otherwise        = throw $ InvalidKeySize 16 (B.length b)
+
+key192 :: ByteString -> Key192
+key192 b
+    | B.length b == 24 = Key192 $ secureMemFromByteString b
+    | otherwise        = throw $ InvalidKeySize 24 (B.length b)
+
+key256 :: ByteString -> Key256
+key256 b
+    | B.length b == 32 = Key256 $ secureMemFromByteString b
+    | otherwise        = throw $ InvalidKeySize 32 (B.length b)
 
 instance Serialize Key64 where
     put (Key64 sm) = putByteString $ secureMemToByteString sm
@@ -51,6 +100,10 @@ instance Serialize Key64 where
 instance Serialize Key128 where
     put (Key128 sm) = putByteString $ secureMemToByteString sm
     get = Key128 . secureMemFromByteString <$> getByteString 16
+
+instance Serialize Key192 where
+    put (Key192 sm) = putByteString $ secureMemToByteString sm
+    get = Key192 . secureMemFromByteString <$> getByteString 24
 
 instance Serialize Key256 where
     put (Key256 sm) = putByteString $ secureMemToByteString sm
@@ -67,6 +120,30 @@ newtype IV128 = IV128 SecureMem
 -- | 256 bits IV
 newtype IV256 = IV256 SecureMem
     deriving (Eq)
+
+-- | Invalid IV size exception raised if IV is not of proper size.
+--
+-- the first argument is the expected size and the second is the
+-- received size.
+data InvalidIVSize = InvalidIVSize Int Int
+    deriving (Show,Eq,Typeable)
+
+instance Exception InvalidIVSize
+
+iv64 :: ByteString -> IV64
+iv64 b
+    | B.length b == 8 = IV64 $ secureMemFromByteString b
+    | otherwise       = throw $ InvalidIVSize 8 (B.length b)
+
+iv128 :: ByteString -> IV128
+iv128 b
+    | B.length b == 16 = IV128 $ secureMemFromByteString b
+    | otherwise        = throw $ InvalidIVSize 16 (B.length b)
+
+iv256 :: ByteString -> IV256
+iv256 b
+    | B.length b == 32 = IV256 $ secureMemFromByteString b
+    | otherwise        = throw $ InvalidIVSize 32 (B.length b)
 
 instance Serialize IV64 where
     put (IV64 sm) = putByteString $ secureMemToByteString sm
